@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+
 <html lang="en">
 <head>
   <meta charset="utf-8"/>
@@ -356,20 +356,4 @@ function toggleDone(id){done=done.includes(id)?done.filter(x=>x!==id):[...done,i
 function startTimerById(id){const s=PLAN.flatMap(w=>w.sessions).find(s=>s.id===id);if(s)startTimer(s)}
 function stopTimer(){clearInterval(timerInt);timer=null;tab="plan";render()}
 function pauseTimer(){if(!timer)return;timer.running=!timer.running;if(timer.running)runTimer();else clearInterval(timerInt);render()}
-function skipTimer(){if(!timer)return;const next=timer.qi+1;if(next>=timer.queue.length){timer.done=true;timer.running=false;clearInterval(timerInt);}else{timer.qi=next;timer.rem=timer.queue[next].dur;}render()}
-function markDone(){if(timer&&!done.includes(timer.session.id)){done=[...done,timer.session.id];save("c6k_done",done)}stopTimer()}
-function logWeight(){
-  const inp=document.getElementById("winput");
-  if(!inp)return;
-  const lbs=toLbs(inp.value,wunit);
-  if(!lbs||lbs<50||lbs>600)return;
-  wlog=[{lbs,date:new Date().toISOString(),id:Date.now()},...wlog];
-  save("c6k_wt",wlog);
-  render();
-}
-function delWeight(id){wlog=wlog.filter(e=>e.id!==id);save("c6k_wt",wlog);render()}
-
-render();
-</script>
-</body>
-</html>
+function skipTimer()
