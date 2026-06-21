@@ -12,7 +12,8 @@
   <style>
     *{box-sizing:border-box;margin:0;padding:0}
     body{background:#fff7ed;font-family:'Nunito',sans-serif;color:#1c1917}
-    .app{max-width:480px;margin:0 auto;min-height:100vh}
+    html{background:#fff7ed}
+    .app{max-width:480px;margin:0 auto;min-height:100vh;background:#fff7ed}
     .nav{display:flex;background:#fff;border-bottom:2px solid #fed7aa;position:sticky;top:0;z-index:10;box-shadow:0 2px 12px rgba(251,146,60,0.12)}
     .nav button{flex:1;padding:10px 4px;text-align:center;font-family:'Nunito',sans-serif;font-weight:800;font-size:11px;color:#a8a29e;cursor:pointer;border:none;border-bottom:3px solid transparent;background:none;transition:all 0.2s}
     .nav button.active{color:#ea580c;border-bottom-color:#ea580c}
@@ -22,7 +23,7 @@
     .pbar-out{height:6px;background:rgba(255,255,255,0.3);border-radius:3px;overflow:hidden;width:120px}
     .pbar-in{height:100%;background:#fff;border-radius:3px;transition:width 0.5s}
     .pct{font-size:12px;color:#fff;font-weight:800;margin-bottom:4px;text-align:right}
-    .scroll{height:calc(100vh - 110px);overflow-y:auto;padding-bottom:60px}
+    .scroll{height:calc(100vh - 110px);overflow-y:auto;padding-bottom:60px;background:#fff7ed}
     .scroll::-webkit-scrollbar{width:4px}
     .scroll::-webkit-scrollbar-thumb{background:#fed7aa;border-radius:3px}
     .wk-block{padding:12px 16px 4px}
@@ -30,6 +31,7 @@
     .wk-label::after{content:'';flex:1;height:1px;background:#fed7aa}
     .card{display:flex;align-items:center;gap:10px;background:#fff;border:2px solid #fed7aa;border-radius:12px;padding:11px 12px;margin-bottom:7px;box-shadow:0 2px 8px rgba(251,146,60,0.08)}
     .card.done-today{background:#f0fdf4;border-color:#bbf7d0}
+    .card.missed-session{background:#fef2f2;border-color:#fecaca;opacity:0.75}
     .chk{width:32px;height:32px;border-radius:50%;border:2.5px solid #d1d5db;background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:14px;font-weight:900;color:transparent;transition:all 0.2s}
     .chk.done{background:linear-gradient(135deg,#22c55e,#16a34a);border-color:transparent;color:white}
     .sname{font-size:13px;font-weight:800;color:#1c1917;margin-bottom:1px}
@@ -38,6 +40,8 @@
     .start-btn{background:linear-gradient(135deg,#f97316,#ea580c);border:none;border-radius:8px;color:white;padding:6px 12px;font-family:'Nunito',sans-serif;font-size:11px;font-weight:800;cursor:pointer;white-space:nowrap}
     .view-btn{background:rgba(249,115,22,0.1);border:1.5px solid rgba(249,115,22,0.3);border-radius:8px;color:#ea580c;padding:6px 10px;font-family:'Nunito',sans-serif;font-size:11px;font-weight:800;cursor:pointer;white-space:nowrap;margin-right:4px}
     .race-card{background:linear-gradient(135deg,#fff7ed,#fef3c7)!important;border-color:#f97316!important}
+    .race-card.race-day{background:linear-gradient(135deg,#f0fdf4,#dcfce7)!important;border-color:#16a34a!important}
+    .race-card.race-day .sname{color:#15803d}
     .session-count{background:#fff7ed;border:1.5px solid #fed7aa;border-radius:20px;padding:2px 8px;font-size:10px;font-weight:800;color:#ea580c;white-space:nowrap}
     /* MODAL */
     .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:100;display:flex;align-items:flex-end}
@@ -122,7 +126,7 @@
     .ctrl{border:none;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s;font-size:18px}
     .ctrl.big{width:68px;height:68px;background:linear-gradient(135deg,#f97316,#ea580c);color:white;font-size:24px;box-shadow:0 6px 24px rgba(234,88,12,0.4)}
     .ctrl.sm{width:52px;height:52px;background:#fff;color:#78716c;border:2px solid #e7e5e4}
-    .done-banner{font-family:'Bebas Neue',sans-serif;font-size:40px;letter-spacing:3px;background:linear-gradient(135deg,#ea580c,#f97316);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:8px}
+    .done-banner{font-family:'Bebas Neue',sans-serif;font-size:40px;letter-spacing:3px;background:linear-gradient(135deg,#f59e0b,#16a34a);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:8px}
     .mark-btn{background:linear-gradient(135deg,#22c55e,#16a34a);border:none;border-radius:12px;color:white;padding:14px 32px;font-family:'Nunito',sans-serif;font-size:15px;font-weight:800;cursor:pointer;margin-top:20px;box-shadow:0 6px 20px rgba(34,197,94,0.35)}
     .qdots{display:flex;gap:5px;flex-wrap:wrap;justify-content:center;margin-top:18px;max-width:280px}
     .qdot{width:10px;height:10px;border-radius:50%;transition:all 0.3s}
@@ -156,41 +160,293 @@ const EXERCISES={
   "Skater Jumps":{muscle:"GLUTES · BALANCE · POWER",diff:"⭐⭐⭐",sets:"3 × 15 each side",tip:"Leap sideways from one foot to the other, landing on a single foot. Hold balance briefly. Directly mimics skiing."},
   "Dead Bug":{muscle:"DEEP CORE · STABILITY",diff:"⭐⭐",sets:"3 × 12 reps",tip:"Lie on back, arms up, knees at 90°. Lower opposite arm and leg slowly. Keep lower back flat throughout."},
   "Side Plank":{muscle:"OBLIQUES · SHOULDERS · HIPS",diff:"⭐⭐⭐",sets:"3 × 45 sec each",tip:"Balance on one forearm, feet stacked. Keep hips up, body in a straight line. Don't let hips sag."},
+  "Goblet Squat":{muscle:"QUADS · GLUTES · CORE",diff:"⭐⭐",sets:"3 × 10 reps",tip:"Hold a dumbbell vertically at chest height. Squat down keeping elbows inside knees. Builds real squat strength beyond bodyweight."},
+  "Dumbbell Romanian Deadlift":{muscle:"HAMSTRINGS · GLUTES · LOWER BACK",diff:"⭐⭐⭐",sets:"3 × 10 reps",tip:"Dumbbells in front of thighs, soft knees, hinge at hips pushing bum back. Keep back flat. Feel the hamstring stretch, don't round."},
+  "Dumbbell Shoulder Press":{muscle:"SHOULDERS · TRICEPS · CORE",diff:"⭐⭐",sets:"3 × 10 reps",tip:"Press dumbbells overhead from shoulder height. Don't arch your back — keep core tight throughout."},
+  "Dumbbell Bent-Over Row":{muscle:"BACK · BICEPS · REAR DELTS",diff:"⭐⭐",sets:"3 × 10 reps",tip:"Hinge forward, flat back, pull dumbbells to your ribs squeezing shoulder blades together. Builds the pulling strength bodyweight work misses."},
+  "Dumbbell Goblet Lunge":{muscle:"QUADS · GLUTES · CORE",diff:"⭐⭐⭐",sets:"3 × 10 each leg",tip:"Hold dumbbell at chest, step into a lunge keeping torso upright. Adds real load to the ski-specific lunge pattern."},
+  "Squat Pulses":{muscle:"QUADS · GLUTES · ENDURANCE",diff:"⭐⭐",sets:"3 × 15 reps",tip:"Lower to a half squat then pulse 2-3 inches up and down without locking out. Zero impact — builds the same quad endurance as jump squats without landing forces. Knee-friendly power alternative."},
+  "Box Step-Down":{muscle:"QUADS · GLUTES · KNEE CONTROL",diff:"⭐⭐⭐",sets:"3 × 10 each leg",tip:"Stand on a low step, slowly lower one foot to the floor under control then step back up. Builds eccentric knee strength without any jumping or landing impact."},
+  "Single Leg Balance Reach":{muscle:"GLUTES · BALANCE · STABILITY",diff:"⭐⭐⭐",sets:"3 × 8 each leg",tip:"Stand on one leg, hinge forward reaching opposite hand toward the floor, return to standing. Builds the single-leg stability skiing demands with zero impact on the knee."},
+  "Side Step Squat":{muscle:"GLUTES · INNER & OUTER THIGH",diff:"⭐⭐",sets:"3 × 12 each side",tip:"Step sideways into a squat, push back to start. Mimics the skater jump pattern and lateral ski movement without ever leaving the floor."},
 };
 
-const WORKOUT_PLAN=[
-  {phase:"Phase 1 — Foundation",weeks:"Weeks 1–4",color:"#f97316",workouts:[
-    {id:"w1a",label:"Strength A",subtitle:"Upper & Core",emoji:"💪",exercises:["Press Ups","Pike Press Ups","Plank","Mountain Climbers","Superman Hold"]},
-    {id:"w1b",label:"Strength B",subtitle:"Legs & Glutes",emoji:"🦵",exercises:["Bodyweight Squats","Reverse Lunges","Glute Bridges","Wall Sit","Calf Raises"]},
-  ]},
-  {phase:"Phase 2 — Build",weeks:"Weeks 5–10",color:"#8b5cf6",workouts:[
-    {id:"w2a",label:"Strength A",subtitle:"Push & Core",emoji:"💪",exercises:["Press Ups","Plank","Russian Twists","Leg Raises","Mountain Climbers"]},
-    {id:"w2b",label:"Strength B",subtitle:"Legs Power",emoji:"🦵",exercises:["Jump Squats","Reverse Lunges","Walking Lunges","Wall Sit","Step Ups","Glute Bridges"]},
-  ]},
-  {phase:"Phase 3 — Intensity",weeks:"Weeks 11–16",color:"#ef4444",workouts:[
-    {id:"w3a",label:"Strength A",subtitle:"Push & Core",emoji:"💪",exercises:["Press Ups","Plank","Russian Twists","Leg Raises","Dead Bug","Side Plank"]},
-    {id:"w3b",label:"Ski Legs",subtitle:"Serious leg work",emoji:"🎿",exercises:["Bulgarian Split Squat","Wall Sit","Jump Squats","Box Jumps","Step Ups","Lateral Lunges"]},
-  ]},
-  {phase:"Phase 4 — Ski Ready",weeks:"Weeks 17–24",color:"#10b981",workouts:[
-    {id:"w4a",label:"Ski Legs",subtitle:"Full ski circuit",emoji:"🎿",exercises:["Jump Squats","Bulgarian Split Squat","Wall Sit","Skater Jumps","Box Jumps","Lateral Lunges","Step Ups","Glute Bridges"]},
-    {id:"w4b",label:"Core Power",subtitle:"Stability & strength",emoji:"🔥",exercises:["Plank","Side Plank","Dead Bug","Russian Twists","Leg Raises","Mountain Climbers"]},
-  ]},
+// 3 rotating session templates per phase — assigned to weeks in sequence
+// Order logic: compound lift first (fresh, needs coordination) → power/control work → accessory moves → isometric holds/core last
+// KNEE NOTE: all jumping/landing moves (Jump Squats, Box Jumps, Skater Jumps) replaced with zero-impact
+// alternatives (Squat Pulses, Box Step-Down, Single Leg Balance Reach, Side Step Squat) given ongoing knee sensitivity.
+// Mountain Climbers also removed — repeated fast knee-drive under load isn't ideal while the knee is niggly.
+const SESSION_TEMPLATES={
+  p1:[
+    {key:"A",subtitle:"Push & Core",emoji:"💪",exercises:["Dumbbell Shoulder Press","Press Ups","Russian Twists","Plank"]},
+    {key:"B",subtitle:"Legs & Glutes",emoji:"🦵",exercises:["Goblet Squat","Reverse Lunges","Glute Bridges","Wall Sit"]},
+    {key:"C",subtitle:"Full Body",emoji:"🔥",exercises:["Dumbbell Bent-Over Row","Bodyweight Squats","Press Ups","Calf Raises","Superman Hold"]},
+  ],
+  p2:[
+    {key:"A",subtitle:"Push & Core",emoji:"💪",exercises:["Dumbbell Shoulder Press","Press Ups","Russian Twists","Leg Raises","Plank"]},
+    {key:"B",subtitle:"Legs Power",emoji:"🦵",exercises:["Goblet Squat","Squat Pulses","Walking Lunges","Step Ups","Wall Sit"]},
+    {key:"C",subtitle:"Full Body",emoji:"🔥",exercises:["Dumbbell Romanian Deadlift","Dumbbell Shoulder Press","Press Ups","Reverse Lunges","Wall Sit"]},
+  ],
+  p3:[
+    {key:"A",subtitle:"Push & Core",emoji:"💪",exercises:["Dumbbell Shoulder Press","Press Ups","Dead Bug","Side Plank","Plank"]},
+    {key:"B",subtitle:"Ski Legs",emoji:"🎿",exercises:["Dumbbell Goblet Lunge","Bulgarian Split Squat","Box Step-Down","Lateral Lunges","Wall Sit"]},
+    {key:"C",subtitle:"Full Body",emoji:"🔥",exercises:["Dumbbell Romanian Deadlift","Dumbbell Bent-Over Row","Squat Pulses","Step Ups","Russian Twists"]},
+  ],
+  p4:[
+    {key:"A",subtitle:"Full Ski Circuit",emoji:"🎿",exercises:["Dumbbell Goblet Lunge","Bulgarian Split Squat","Side Step Squat","Lateral Lunges","Wall Sit"]},
+    {key:"B",subtitle:"Power & Core",emoji:"🔥",exercises:["Dumbbell Romanian Deadlift","Dumbbell Shoulder Press","Single Leg Balance Reach","Dead Bug","Side Plank","Plank"]},
+    {key:"C",subtitle:"Ski Strength",emoji:"💪",exercises:["Dumbbell Bent-Over Row","Bulgarian Split Squat","Box Step-Down","Walking Lunges","Russian Twists","Wall Sit"]},
+  ],
+};
+
+// Deload week template — every 4th week, lighter volume, no compound impact, focus on mobility + light strength
+const DELOAD_SESSION={subtitle:"Deload — Lighter Week",emoji:"🌿",exercises:["Bodyweight Squats","Press Ups","Glute Bridges","Plank","Calf Raises"]};
+
+function buildPhaseWeeks(phaseId,startWeek,endWeek,phaseName,color){
+  const templates=SESSION_TEMPLATES[phaseId];
+  const weeks=[];
+  let t=0;
+  for(let w=startWeek;w<=endWeek;w++){
+    const isDeload=(w%4===0); // every 4th week globally is a deload
+    const tmpl=isDeload?DELOAD_SESSION:templates[t%templates.length];
+    weeks.push({
+      week:w,
+      phase:phaseName,
+      color:color,
+      deload:isDeload,
+      workouts:[{
+        id:phaseId+"_wk"+w,
+        label:isDeload?"Friday — Deload":"Friday — Session "+tmpl.key,
+        subtitle:tmpl.subtitle,
+        emoji:tmpl.emoji,
+        exercises:tmpl.exercises
+      }]
+    });
+    if(!isDeload)t++;
+  }
+  return weeks;
+}
+
+// Ski goal is fully user-set, like the run goal — no fixed 29 Nov default.
+function getSkiGoal(){return load("ski_goal",null);} // {startDate, targetDate}
+
+const PHASE_DEFS=[
+  {id:"p1",name:"Phase 1 — Foundation",color:"#f97316",originalWeeks:4},
+  {id:"p2",name:"Phase 2 — Build",color:"#8b5cf6",originalWeeks:6},
+  {id:"p3",name:"Phase 3 — Intensity",color:"#ef4444",originalWeeks:6},
+  {id:"p4",name:"Phase 4 — Ski Ready",color:"#10b981",originalWeeks:8},
 ];
+const ORIGINAL_TOTAL_WEEKS=PHASE_DEFS.reduce((a,p)=>a+p.originalWeeks,0); // 24
 
-const RUNNING_PLAN=[
-  {week:1,sessions:[{id:1,label:"Session 1",run:2,rest:2,rounds:6},{id:2,label:"Session 2",run:2.5,rest:2,rounds:6},{id:3,label:"Session 3",run:3,rest:2,rounds:5}]},
-  {week:2,sessions:[{id:4,label:"Session 4",run:3,rest:1.5,rounds:5},{id:5,label:"Session 5",run:4,rest:2,rounds:4},{id:6,label:"Session 6",run:5,rest:2,rounds:4}]},
-  {week:3,sessions:[{id:7,label:"Session 7",run:8,rest:2,rounds:3},{id:8,label:"Session 8",run:10,rest:2,rounds:3},{id:9,label:"Session 9",run:15,rest:2,rounds:2}]},
-  {week:4,sessions:[{id:10,label:"Session 10",run:20,rest:2,rounds:2},{id:11,label:"Session 11",run:30,rest:0,rounds:1},{id:12,label:"Session 12",run:38,rest:0,rounds:1}]}
-];
+// Builds the full gym plan, scaling all 4 phases PROPORTIONALLY to fit however many weeks are
+// actually available before the ski trip — rather than chopping weeks off the end (which would
+// cut the ski-specific final phase short) or the start (which would skip foundation work).
+function buildSkiPlan(goal){
+  const start=new Date(goal.startDate),end=new Date(goal.targetDate);
+  const requestedWeeks=Math.max(1,Math.round((end-start)/(7*24*60*60*1000)));
+  const minTotal=PHASE_DEFS.length; // each phase needs at least 1 week
+  const totalWeeks=Math.max(minTotal,requestedWeeks);
+  const extended=totalWeeks>requestedWeeks;
 
-const MS=[{label:"Start",target:238},{label:"Wk 4",target:232},{label:"Wk 8",target:226},{label:"Wk 13",target:218},{label:"Wk 20",target:209},{label:"Ski 🎿",target:203}];
-const SW=238,GW=203;
+  const ratios=PHASE_DEFS.map(p=>p.originalWeeks/ORIGINAL_TOTAL_WEEKS);
+  let weeksPerPhase=ratios.map(r=>Math.max(1,Math.round(r*totalWeeks)));
+  let diff=totalWeeks-weeksPerPhase.reduce((a,b)=>a+b,0);
+  while(diff!==0){
+    if(diff>0){weeksPerPhase[weeksPerPhase.indexOf(Math.max(...weeksPerPhase))]++;diff--;}
+    else{const idx=weeksPerPhase.indexOf(Math.max(...weeksPerPhase));if(weeksPerPhase[idx]>1){weeksPerPhase[idx]--;diff++;}else break;}
+  }
 
-function save(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
+  let plan=[],weekCursor=1;
+  PHASE_DEFS.forEach((p,i)=>{
+    const phaseWeeks=weeksPerPhase[i];
+    plan=plan.concat(buildPhaseWeeks(p.id,weekCursor,weekCursor+phaseWeeks-1,p.name,p.color));
+    weekCursor+=phaseWeeks;
+  });
+  return {plan,totalWeeks,requestedWeeks,extended};
+}
+
+// Run plan is now generated dynamically based on user's starting fitness, target distance and date
+function getRunGoal(){return load("run_goal",null);} // {fitness, targetKm, startDate, targetDate}
+
+// Generates a plan using a capped weekly growth rate (15%) for the continuous-running build phase,
+// always includes a taper week before the target date, and is honest about what's achievable —
+// it will never silently produce a dangerous final-week distance jump.
+// Fitness is now stored as actual continuous-run minutes (0, 5, 8, 10, 12, 15, 20, 25, 30+)
+// rather than 3 coarse buckets — avoids treating an 8-min and 12-min runner identically.
+function intervalRatioForMinutes(mins){
+  if(mins<=0)return 0.5;
+  if(mins>=20)return 0;
+  return Math.max(0,0.5-(mins/20)*0.5);
+}
+// Used ONLY for the realistic-date calculation. Unlike intervalRatioForMinutes (which scales with
+// whatever timeline the user picked), this is a FIXED number of weeks based purely on fitness level —
+// it must stay constant regardless of the chosen date, otherwise "what's the realistic date" becomes
+// circular: a longer chosen timeline -> more interval weeks -> later realistic date -> apply it ->
+// timeline is now even longer -> even more interval weeks -> date moves again. (This was a real bug:
+// tapping "USE THIS DATE INSTEAD" kept producing a new, later date each time instead of converging.)
+function fixedIntervalWeeksForMinutes(mins){
+  if(mins<=0)return 6;
+  if(mins<10)return 4;
+  if(mins<20)return 2;
+  return 0;
+}
+function baseKmForMinutes(mins){
+  // Calibrated against real beginner 10K plans (Hal Higdon Novice, Gymshark 8-10wk) which assume
+  // a runner starting their plan can already run-walk roughly 2-3km, not pure continuous-running-only
+  // distance. Someone who reports 10 continuous minutes can typically already cover more ground than
+  // a strict minutes/pace conversion implies once walk breaks are allowed for.
+  if(mins<=0)return 1.0; // true beginner, matches couch-to-5k starting point
+  return Math.max(1.0,Math.round((1.0+mins*0.13)*10)/10);
+}
+function capForDistance(km){
+  // Tiered growth cap calibrated against real coached plans, which grow distance much faster
+  // than a flat 10%/week when starting from a small base (small absolute increases are low-risk),
+  // then taper toward the standard "10% rule" once distances get larger.
+  if(km<3)return 0.25;
+  if(km<6)return 0.15;
+  return 0.10;
+}
+
+function generateRunPlan(goal){
+  const start=new Date(goal.startDate),end=new Date(goal.targetDate);
+  const totalWeeks=Math.max(2,Math.round((end-start)/(7*24*60*60*1000)));
+  const targetKm=goal.targetKm;
+  const fitnessMins=goal.fitnessMins??0;
+  const plan=[];
+  let sessionId=1;
+
+  // Uses the SAME fixed-week logic as the realistic-date calculation below, so the two stay
+  // consistent with each other. Previously this scaled with totalWeeks (more weeks chosen ->
+  // proportionally more interval weeks), which caused the "achievable" check to disagree with
+  // the realistic date calculation — applying the suggested date could still show "not achievable"
+  // because the actual plan ate into the build phase with more interval weeks than assumed.
+  const intervalWeeks=Math.min(fixedIntervalWeeksForMinutes(fitnessMins),Math.max(0,totalWeeks-2));
+
+  const hasTaper=totalWeeks>=3;
+  const taperWeek=hasTaper?totalWeeks:0;
+  const continuousWeeks=totalWeeks-intervalWeeks;
+  const buildWeeks=hasTaper?Math.max(1,continuousWeeks-1):continuousWeeks;
+
+  const baseKm=baseKmForMinutes(fitnessMins);
+
+  // Build the week-by-week long-run distance progression using a tiered growth cap
+  // (25% under 3km, 15% from 3-6km, 10% above 6km) rather than a single flat rate —
+  // this matches how real coached plans (Hal Higdon Novice 10K, Gymshark 8-10wk) actually
+  // progress: large relative jumps early when absolute distances are tiny and low-risk,
+  // tapering toward the standard "10% rule" once distances get larger.
+  const buildKmByWeek=[];
+  if(buildWeeks>0){
+    let km=baseKm;
+    buildKmByWeek.push(Math.round(km*100)/100);
+    for(let w=1;w<buildWeeks;w++){
+      const cap=capForDistance(km);
+      km=Math.min(targetKm,km*(1+cap));
+      buildKmByWeek.push(Math.round(km*100)/100);
+    }
+  }
+  const finalBuildKm=buildKmByWeek.length>0?buildKmByWeek[buildKmByWeek.length-1]:baseKm;
+  const achievable=finalBuildKm>=targetKm-0.05; // small tolerance for rounding
+  const effectiveTargetKm=achievable?targetKm:finalBuildKm;
+  const maxAchievableKm=finalBuildKm;
+
+  // If not achievable by the chosen date, work out how many additional build weeks it would
+  // actually take to reach the real target using the same tiered-cap progression, then convert
+  // that into a realistic calendar date so the user knows when they could genuinely hit their goal.
+  let realisticDate=null;
+  if(!achievable){
+    let km=baseKm,extraWeeks=0;
+    const MAX_ITER=500;
+    while(km<targetKm-0.05&&extraWeeks<MAX_ITER){
+      const cap=capForDistance(km);
+      km=Math.min(targetKm,km*(1+cap));
+      extraWeeks++;
+    }
+    // Uses a FIXED interval-week count based on fitness only — not the chosen timeline's intervalWeeks —
+    // so this answer is stable and doesn't shift every time it's applied. Calculated forward from
+    // today (not the original goal start date) so the answer reflects "from now", which is what
+    // actually matters when the user taps "USE THIS DATE INSTEAD".
+    // NOTE: buildKmByWeek's first entry is the starting point itself (no growth applied), and only
+    // the remaining buildWeeks-1 entries represent actual growth steps — so extraWeeks here must
+    // match that same convention (the starting week counts, then N-1 growth weeks) to stay consistent
+    // with how the plan above is actually built. Previously this counted pure growth steps only,
+    // landing one week short of what the real plan could achieve in the same number of weeks.
+    const fixedIntervalWeeks=fixedIntervalWeeksForMinutes(fitnessMins);
+    const realisticTotalWeeks=fixedIntervalWeeks+extraWeeks+1+1; // +1 taper, +1 to align with buildKmByWeek's convention
+    const today=new Date();
+    const realisticMs=today.getTime()+realisticTotalWeeks*7*24*60*60*1000;
+    realisticDate=new Date(realisticMs).toISOString().slice(0,10);
+  }
+
+  for(let w=1;w<=totalWeeks;w++){
+    const sessions=[];
+    const isTaper=w===taperWeek&&hasTaper;
+    if(w<=intervalWeeks){
+      // 2 sessions/week to match the actual schedule: Mon easy intervals, Sat slightly longer intervals
+      // Progress is 0-indexed so week 1 of the interval phase always starts EASIEST (short run, long rest)
+      // and only the final interval week reaches the hardest setting. Previously this used w/intervalWeeks,
+      // which made week 1 of a short (1-2 week) interval phase jump straight to peak difficulty — fixed.
+      // Starting run length now also scales with fitnessMins — previously a 0-min and 10-min runner both
+      // started week 1 at the same 1-minute interval, ignoring the fitness input entirely.
+      const intervalProgress=intervalWeeks<=1?0:(w-1)/(intervalWeeks-1);
+      const startMin=Math.max(1,Math.min(8,Math.round(fitnessMins*0.6*2)/2));
+      const peakMin=Math.max(startMin+1,7);
+      const runMin=Math.round((startMin+intervalProgress*(peakMin-startMin))*2)/2;
+      const restMin=Math.max(1,Math.round((2.5-intervalProgress*1.5)*2)/2);
+      const rounds=Math.max(2,Math.round(7-intervalProgress*3));
+      for(let s=0;s<2;s++){
+        sessions.push({id:sessionId++,run:Math.round((runMin+s*0.5)*10)/10,rest:restMin,rounds:rounds,day:s===0?"Mon — Easy Run":"Sat — Long Run",label:s===0?"Mon — Easy Run":"Sat — Long Run"});
+      }
+    } else {
+      // 2 sessions/week: Mon = easy run (shorter), Sat = long run (this week's distance from the simulated build curve)
+      const contWeekNum=w-intervalWeeks;
+      let weekLongKm;
+      if(isTaper){
+        weekLongKm=Math.round(finalBuildKm*0.55*10)/10;
+      } else {
+        const idx=Math.min(contWeekNum-1,buildKmByWeek.length-1);
+        weekLongKm=buildKmByWeek[idx]??finalBuildKm;
+      }
+      const easyKm=Math.round(weekLongKm*0.55*10)/10;
+      [{km:easyKm,day:"Mon — Easy Run"},{km:weekLongKm,day:"Sat — Long Run"}].forEach(({km,day})=>{
+        sessions.push({id:sessionId++,run:Math.round(km*7),rest:0,rounds:1,km:Math.round(km*10)/10,day:day,label:day});
+      });
+    }
+    plan.push({week:w,sessions,isTaper});
+  }
+  return {plan,achievable,effectiveTargetKm,maxAchievableKm:Math.round(maxAchievableKm*10)/10,totalWeeks,realisticDate};
+}
+
+// Weight goal is now fully user-set — no preset defaults
+function getWeightGoal(){return load("weight_goal",null);} // {startLbs, goalLbs, startDate, targetDate}
+function buildMilestones(goal){
+  if(!goal)return[];
+  const totalLoss=goal.startLbs-goal.goalLbs;
+  if(totalLoss<=0)return[{label:"Start",target:goal.startLbs},{label:"Goal",target:goal.goalLbs}];
+  const start=new Date(goal.startDate),end=new Date(goal.targetDate);
+  const totalWeeks=Math.max(1,Math.round((end-start)/(7*24*60*60*1000)));
+  const checkpoints=[0,Math.round(totalWeeks*0.25),Math.round(totalWeeks*0.5),Math.round(totalWeeks*0.75),totalWeeks];
+  const uniqueWeeks=[...new Set(checkpoints)];
+  return uniqueWeeks.map(w=>({
+    label:w===0?"Start":w===totalWeeks?"Goal 🎯":"Wk "+w,
+    target:Math.round(goal.startLbs-(totalLoss*(w/totalWeeks)))
+  }));
+}
+
+let storageBroken=false; // set true the moment any save() call fails - drives the warning banner
+function save(k,v){
+  try{
+    localStorage.setItem(k,JSON.stringify(v));
+    storageBroken=false; // a successful save clears the flag - storage recovered
+    return true;
+  }catch(e){
+    storageBroken=true;
+    return false;
+  }
+}
 function load(k,d){try{return JSON.parse(localStorage.getItem(k))||d}catch(e){return d}}
 
 let runDone=load("c6k_done",[]);
+let runMissed=load("c6k_missed",[]); // sessions explicitly marked as missed — skipped, plan continues as-is
 // gymDoneToday: {workoutId: "YYYY-MM-DD"} — only today counts
 let gymDoneToday=load("gym_done_today",{});
 // gymLogs: {exSafeKey: [{workoutId, date, sets:[{reps,weight}]}]}
@@ -202,8 +458,13 @@ let wlog=load("c6k_wt",[]);
 let tab="run",wunit="st",timer=null,timerInt=null,audioCtx=null,modalWorkout=null;
 let expandedHistory={};
 
-const todayDate=()=>new Date().toISOString().slice(0,10);
+// Uses local calendar date components (not toISOString, which is UTC and can drift to the
+// next/previous day late in the evening for UK timezones) - this is the same class of bug
+// fixed earlier for the weight-goal "days left" display, fixed here at the source so every
+// caller benefits consistently.
+const todayDate=()=>{const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");};
 const isToday=(dateStr)=>dateStr===todayDate();
+const isSameOrPastDay=(targetDateStr)=>targetDateStr<=todayDate(); // true once the target calendar day has arrived
 const fmtDate=(iso)=>new Date(iso).toLocaleDateString("en-GB",{weekday:"short",day:"numeric",month:"short",year:"2-digit"});
 const todayDisplay=()=>new Date().toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"2-digit"});
 
@@ -228,8 +489,8 @@ function saveAll(){save("gym_logs2",gymLogs);save("current_session",currentSessi
 
 function getCtx(){if(!audioCtx)audioCtx=new(window.AudioContext||window.webkitAudioContext)();return audioCtx}
 function beep(f,d,g){try{const ctx=getCtx(),o=ctx.createOscillator(),gn=ctx.createGain();o.connect(gn);gn.connect(ctx.destination);o.frequency.value=f;gn.gain.setValueAtTime(g,ctx.currentTime);gn.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+d);o.start();o.stop(ctx.currentTime+d)}catch(e){}}
-function dblBeep(){beep(523,0.12,0.3);setTimeout(()=>beep(784,0.2,0.4),160)}
-function triBeep(){beep(400,0.1,0.3);setTimeout(()=>beep(500,0.1,0.3),120);setTimeout(()=>beep(700,0.25,0.4),240)}
+function dblBeep(){beep(523,0.15,0.5);setTimeout(()=>beep(784,0.25,0.6),160)}
+function triBeep(){beep(400,0.12,0.5);setTimeout(()=>beep(500,0.12,0.5),120);setTimeout(()=>beep(700,0.3,0.6),240)}
 function toLbs(v,u){const n=parseFloat(v);if(isNaN(n)||n<=0)return null;if(u==="lbs")return Math.round(n*10)/10;if(u==="kg")return Math.round(n*2.2046*10)/10;return Math.round(n*14*10)/10}
 function dispW(lbs,u){if(u==="lbs")return Math.round(lbs)+"lbs";if(u==="kg")return(lbs/2.2046).toFixed(1)+"kg";return lbsToSt(lbs)}
 function lbsToSt(lbs){return Math.floor(lbs/14)+"st "+Math.round(lbs%14)+"lb"}
@@ -248,17 +509,30 @@ function runTimer(){
   timerInt=setInterval(()=>{
     if(!timer||!timer.running||timer.done)return;
     timer.rem--;
-    if(timer.rem<=3&&timer.rem>0)beep(440,0.1,0.2);
+    if(timer.rem===3)beep(440,0.15,0.45);
+    else if(timer.rem===2)beep(440,0.15,0.45);
+    else if(timer.rem===1)beep(587,0.2,0.55);
     if(timer.rem<=0){const next=timer.qi+1;if(next>=timer.queue.length){triBeep();clearInterval(timerInt);timer.done=true;timer.running=false;}else{dblBeep();timer.qi=next;timer.rem=timer.queue[next].dur;}}
     render();
   },1000);
 }
 function stopTimer(){clearInterval(timerInt);timer=null;tab="run";render()}
 
+function renderStorageWarning(){
+  if(!storageBroken)return"";
+  return`<div style="background:linear-gradient(135deg,#dc2626,#b91c1c);padding:10px 16px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:20">
+    <span style="font-size:18px">⚠️</span>
+    <div style="flex:1">
+      <div style="font-size:11px;font-weight:800;color:#fff;letter-spacing:1px">YOUR DATA ISN'T SAVING</div>
+      <div style="font-size:10px;color:rgba(255,255,255,0.9);font-weight:600;margin-top:1px">Storage may be full or restricted (e.g. Private Browsing). Recent changes might not be kept. Try a normal browser tab.</div>
+    </div>
+  </div>`;
+}
 function render(){
   const app=document.getElementById("app");
-  if(tab==="timer"){app.innerHTML=renderTimer();}
-  else{let html=nav();if(tab==="run")html+=renderRun();else if(tab==="gym")html+=renderGym();else if(tab==="weight")html+=renderWeight();app.innerHTML=html;}
+  const warning=renderStorageWarning();
+  if(tab==="timer"){app.innerHTML=warning+renderTimer();}
+  else{let html=warning+nav();if(tab==="run")html+=renderRun();else if(tab==="gym")html+=renderGym();else if(tab==="weight")html+=renderWeight();app.innerHTML=html;}
   if(modalWorkout){document.getElementById("app").insertAdjacentHTML("beforeend",renderModal());}
   attachEvents();
 }
@@ -266,28 +540,179 @@ function render(){
 function nav(){return`<div class="nav"><button class="${tab==="run"?"active":""}" onclick="setTab('run')">🏃 RUN</button><button class="${tab==="gym"?"active":""}" onclick="setTab('gym')">🏋️ GYM</button><button class="${tab==="weight"?"active":""}" onclick="setTab('weight')">⚖️ WEIGHT</button></div>`;}
 
 function renderRun(){
-  const pct=Math.round(runDone.length/12*100);
-  let html=`<div class="header"><div><div class="logo">COUCH TO 6K</div><div class="header-sub">27 JUNE TARGET · ${runDone.length}/12 SESSIONS</div></div><div style="text-align:right"><div class="pct">${pct}%</div><div class="pbar-out"><div class="pbar-in" style="width:${pct}%"></div></div></div></div><div class="scroll">`;
-  RUNNING_PLAN.forEach(week=>{
-    html+=`<div class="wk-block"><div class="wk-label">WEEK ${week.week}</div>`;
+  const goal=getRunGoal();
+
+  if(!goal){
+    let html=`<div class="header"><div><div class="logo">RUN PLANNER</div><div class="header-sub">SET YOUR TARGET TO BUILD A PLAN</div></div></div><div class="scroll">`;
+    html+=`<div style="padding:16px">
+      <div style="background:#fff;border:2px solid #fed7aa;border-radius:14px;padding:16px">
+        <div style="font-size:12px;font-weight:700;color:#78716c;margin-bottom:14px;line-height:1.5">Tell us your current ability, your target distance, and your target date — we'll build a progressive plan automatically.</div>
+
+        <div class="set-lbl" style="text-align:left;margin-bottom:6px">HOW LONG CAN YOU CURRENTLY RUN CONTINUOUSLY?</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:14px" id="fitnessOptions">
+          <button class="fitness-opt" data-val="0" onclick="selectFitness(0)" style="text-align:center;padding:10px 8px;border:2px solid #fed7aa;border-radius:10px;background:#fff;font-size:12px;font-weight:700;color:#1c1917;cursor:pointer">🚶 Can't run yet</button>
+          <button class="fitness-opt" data-val="5" onclick="selectFitness(5)" style="text-align:center;padding:10px 8px;border:2px solid #fed7aa;border-radius:10px;background:#fff;font-size:12px;font-weight:700;color:#1c1917;cursor:pointer">~5 mins</button>
+          <button class="fitness-opt" data-val="8" onclick="selectFitness(8)" style="text-align:center;padding:10px 8px;border:2px solid #fed7aa;border-radius:10px;background:#fff;font-size:12px;font-weight:700;color:#1c1917;cursor:pointer">~8 mins</button>
+          <button class="fitness-opt" data-val="10" onclick="selectFitness(10)" style="text-align:center;padding:10px 8px;border:2px solid #fed7aa;border-radius:10px;background:#fff;font-size:12px;font-weight:700;color:#1c1917;cursor:pointer">~10 mins</button>
+          <button class="fitness-opt" data-val="12" onclick="selectFitness(12)" style="text-align:center;padding:10px 8px;border:2px solid #fed7aa;border-radius:10px;background:#fff;font-size:12px;font-weight:700;color:#1c1917;cursor:pointer">~12 mins</button>
+          <button class="fitness-opt" data-val="15" onclick="selectFitness(15)" style="text-align:center;padding:10px 8px;border:2px solid #fed7aa;border-radius:10px;background:#fff;font-size:12px;font-weight:700;color:#1c1917;cursor:pointer">~15 mins</button>
+          <button class="fitness-opt" data-val="20" onclick="selectFitness(20)" style="text-align:center;padding:10px 8px;border:2px solid #fed7aa;border-radius:10px;background:#fff;font-size:12px;font-weight:700;color:#1c1917;cursor:pointer">~20 mins</button>
+          <button class="fitness-opt" data-val="30" onclick="selectFitness(30)" style="text-align:center;padding:10px 8px;border:2px solid #fed7aa;border-radius:10px;background:#fff;font-size:12px;font-weight:700;color:#1c1917;cursor:pointer">30+ mins</button>
+        </div>
+
+        <div class="set-lbl" style="text-align:left;margin-bottom:4px">TARGET DISTANCE (KM)</div>
+        <input class="winput" id="targetKm" type="number" step="0.5" placeholder="e.g. 6" style="width:100%;margin-bottom:14px"/>
+
+        <div class="set-lbl" style="text-align:left;margin-bottom:4px">TARGET DATE</div>
+        <input id="runTargetDate" type="date" style="display:block;width:100%;box-sizing:border-box;background:#fff;border:2px solid #fed7aa;border-radius:10px;padding:12px;color:#1c1917;font-family:'Nunito',sans-serif;font-size:15px;font-weight:700;outline:none;margin-bottom:16px;-webkit-appearance:none;appearance:none"/>
+
+        <button class="log-btn" onclick="setRunGoal()" style="width:100%;padding:12px">BUILD MY PLAN 🏃</button>
+      </div>
+    </div></div>`;
+    return html;
+  }
+
+  const result=generateRunPlan(goal);
+  const plan=result.plan;
+  const totalSessions=plan.reduce((a,w)=>a+w.sessions.length,0);
+  const doneCount=runDone.filter(id=>plan.some(w=>w.sessions.some(s=>s.id===id))).length;
+  const missedCount=runMissed.filter(id=>plan.some(w=>w.sessions.some(s=>s.id===id))).length;
+  const resolvedCount=doneCount+missedCount; // completed plan = every session either done or explicitly missed
+  const pct=totalSessions>0?Math.round(doneCount/totalSessions*100):0;
+  const targetDateDisplay=new Date(goal.targetDate).toLocaleDateString("en-GB",{day:"numeric",month:"long"});
+  const isRaceDay=isSameOrPastDay(goal.targetDate);
+  const displayKm=result.achievable?goal.targetKm:result.effectiveTargetKm;
+
+  let html=`<div class="header"><div><div class="logo">RUN TO ${displayKm}KM</div><div class="header-sub">${targetDateDisplay.toUpperCase()} TARGET · ${doneCount}/${totalSessions} SESSIONS${missedCount>0?" · "+missedCount+" missed":""}</div></div><div style="text-align:right"><div class="pct">${pct}%</div><div class="pbar-out"><div class="pbar-in" style="width:${pct}%"></div></div></div></div><div class="scroll">`;
+  html+=`<div style="padding:10px 16px 0;text-align:right"><button onclick="editRunGoal()" style="background:none;border:1.5px solid #fed7aa;border-radius:8px;color:#ea580c;padding:4px 10px;font-size:10px;font-weight:800;cursor:pointer">✏️ EDIT GOAL</button></div>`;
+
+  if(!result.achievable){
+    const realisticDateDisplay=result.realisticDate?new Date(result.realisticDate).toLocaleDateString("en-GB",{day:"numeric",month:"long",year:"numeric"}):null;
+    html+=`<div style="margin:10px 16px;background:#fef2f2;border:2px solid #fecaca;border-radius:12px;padding:12px 14px">
+      <div style="font-size:11px;font-weight:800;color:#dc2626;letter-spacing:1px;margin-bottom:4px">⚠️ TIMELINE TOO SHORT FOR ${goal.targetKm}KM</div>
+      <div style="font-size:12px;color:#7f1d1d;font-weight:600;line-height:1.5">Going from your current ability to ${goal.targetKm}km in ${result.totalWeeks} weeks would mean increasing your distance faster than is generally considered safe. This plan instead builds you safely up to <b>${result.effectiveTargetKm}km</b> by your target date.</div>
+      ${realisticDateDisplay?`<div style="background:#fff;border-radius:10px;padding:10px 12px;margin-top:10px;border:1.5px solid #fca5a5">
+        <div style="font-size:10px;font-weight:800;color:#dc2626;letter-spacing:1px;margin-bottom:3px">📅 REALISTIC DATE FOR ${goal.targetKm}KM</div>
+        <div style="font-size:13px;font-weight:800;color:#1c1917">${realisticDateDisplay}</div>
+        <div style="font-size:11px;color:#7f1d1d;font-weight:600;margin-top:4px">That's when you'd safely reach ${goal.targetKm}km following the same gradual progression.</div>
+        <button onclick="applyRealisticDate('${result.realisticDate}')" style="width:100%;margin-top:8px;background:linear-gradient(135deg,#dc2626,#b91c1c);border:none;border-radius:8px;color:white;padding:9px;font-family:'Nunito',sans-serif;font-size:12px;font-weight:800;cursor:pointer">USE THIS DATE INSTEAD</button>
+      </div>`:""}
+    </div>`;
+  }
+
+  plan.forEach(week=>{
+    html+=`<div class="wk-block"><div class="wk-label">WEEK ${week.week}${week.isTaper?' <span style="background:#dcfce7;color:#16a34a;padding:1px 8px;border-radius:10px;letter-spacing:1px;font-size:10px">🌿 TAPER</span>':""}</div>`;
     week.sessions.forEach(s=>{
       const isDone=runDone.includes(s.id);
-      html+=`<div class="card${isDone?" done-today":""}"><button class="chk${isDone?" done":""}" onclick="toggleRun(${s.id})">${isDone?"✓":""}</button><div style="flex:1"><div class="sname">${s.label}</div><div class="smeta">🟣 5min warm up · ${s.run}min run${s.rest>0?" / "+s.rest+"min rest":""} × ${s.rounds} · 🟢 5min cool down</div></div>${isDone?'<span style="font-size:20px">🔥</span>':`<button class="start-btn" onclick="startTimerById(${s.id})">▶ START</button>`}</div>`;
+      const isMissed=runMissed.includes(s.id);
+      const label=s.day||"Run Session";
+      const metaText=s.km
+        ?`🟣 5min warm up · ${s.km}km continuous run (~${s.run}min) · 🟢 5min cool down`
+        :`🟣 5min warm up · ${s.run}min run${s.rest>0?" / "+s.rest+"min rest":""} × ${s.rounds} · 🟢 5min cool down`;
+      let cardClass=isDone?" done-today":isMissed?" missed-session":"";
+      let rightSide;
+      if(isDone){rightSide='<span style="font-size:20px">🔥</span>';}
+      else if(isMissed){rightSide=`<button onclick="toggleMissed(${s.id})" style="background:#fee2e2;border:1.5px solid #fca5a5;border-radius:8px;color:#dc2626;padding:6px 10px;font-size:10px;font-weight:800;cursor:pointer">↺ UNDO</button>`;}
+      else{rightSide=`<button class="start-btn" onclick="startTimerByGenId(${s.id})">▶ START</button><button onclick="toggleMissed(${s.id})" title="Mark as missed" style="background:none;border:1.5px solid #e2e8f0;border-radius:8px;color:#a8a29e;padding:6px 8px;font-size:10px;font-weight:800;cursor:pointer;margin-left:4px">✕</button>`;}
+      html+=`<div class="card${cardClass}"><button class="chk${isDone?" done":""}" onclick="toggleRun(${s.id})" ${isMissed?"disabled":""}>${isDone?"✓":""}</button><div style="flex:1"><div class="sname">${label}${isMissed?' <span style="color:#dc2626;font-size:10px;font-weight:800;letter-spacing:1px">MISSED</span>':""}</div><div class="smeta">${metaText}</div></div>${rightSide}</div>`;
     });
     html+="</div>";
   });
-  html+=`<div style="padding:12px 16px"><div class="card race-card"><span style="font-size:24px">🏁</span><div style="flex:1"><div class="sname">RACE DAY — 6K</div><div class="smeta">27 JUNE · GO GET IT!</div></div>${runDone.length===12?'<span style="font-size:20px">🏆</span>':""}</div></div></div>`;
+  html+=`<div style="padding:12px 16px"><div class="card race-card${isRaceDay?" race-day":""}"><span style="font-size:24px">🏁</span><div style="flex:1"><div class="sname">${isRaceDay?"TODAY'S THE DAY":"RACE DAY"} — ${displayKm}KM</div><div class="smeta">${targetDateDisplay.toUpperCase()} · ${isRaceDay?"YOU'VE GOT THIS!":"GO GET IT!"}</div></div>${resolvedCount===totalSessions?'<span style="font-size:20px">🏆</span>':""}</div></div></div>`;
   return html;
 }
 
+let selectedFitness=null; // store as number; null means "not yet selected" (0 is a valid selection)
+function selectFitness(val){
+  selectedFitness=val;
+  document.querySelectorAll(".fitness-opt").forEach(btn=>{
+    if(parseInt(btn.dataset.val)===val){btn.style.borderColor="#f97316";btn.style.background="#fff7ed";}
+    else{btn.style.borderColor="#fed7aa";btn.style.background="#fff";}
+  });
+}
+function setRunGoal(){
+  if(selectedFitness===null){alert("Please select your current running ability!");return;}
+  const kmEl=document.getElementById("targetKm");
+  const dateEl=document.getElementById("runTargetDate");
+  const km=parseFloat(kmEl.value);
+  const date=dateEl.value;
+  if(!date){alert("Please choose a target date!");return;}
+  if(!km||km<=0||km>200){alert("Please enter a realistic target distance (e.g. between 1 and 200km).");return;}
+  const todayMidnight=new Date();todayMidnight.setHours(0,0,0,0);
+  const chosenDate=new Date(date+"T00:00:00");
+  if(chosenDate<=todayMidnight){alert("Please choose a target date in the future!");return;}
+  const goal={fitnessMins:selectedFitness,targetKm:km,startDate:new Date().toISOString().slice(0,10),targetDate:date};
+  save("run_goal",goal);
+  selectedFitness=null;
+  render();
+}
+function editRunGoal(){
+  const hasCompletedRuns=runDone.length>0||runMissed.length>0;
+  if(hasCompletedRuns){
+    const confirmed=confirm("You've already ticked off some runs on your current plan. Changing your target will rebuild the week numbering — your tick history is tied to session numbers, so some completed sessions may no longer line up correctly. Continue?");
+    if(!confirmed)return;
+  }
+  save("run_goal",null);render();
+}
+function applyRealisticDate(newDate){
+  const goal=getRunGoal();
+  if(!goal)return;
+  goal.targetDate=newDate;
+  save("run_goal",goal);
+  render();
+}
+function startTimerByGenId(id){
+  const goal=getRunGoal();
+  if(!goal)return;
+  const result=generateRunPlan(goal);
+  const s=result.plan.flatMap(w=>w.sessions).find(s=>s.id===id);
+  if(s)startTimer(s);
+}
+
 function renderGym(){
-  // Count total sessions saved across all workouts for header
+  const goal=getSkiGoal();
+
+  if(!goal){
+    let html=`<div class="header"><div><div class="logo">SKI FIT PLAN</div><div class="header-sub">SET YOUR SKI DATE TO BUILD A PLAN</div></div></div><div class="scroll">`;
+    html+=`<div style="padding:16px">
+      <div style="background:#fff;border:2px solid #fed7aa;border-radius:14px;padding:16px">
+        <div style="font-size:12px;font-weight:700;color:#78716c;margin-bottom:14px;line-height:1.5">When's your first ski session? We'll build a 4-phase gym plan (Foundation → Build → Intensity → Ski Ready) that fits exactly the time you've got.</div>
+        <div class="set-lbl" style="text-align:left;margin-bottom:4px">FIRST SKI SESSION DATE</div>
+        <input id="skiTargetDate" type="date" style="display:block;width:100%;box-sizing:border-box;background:#fff;border:2px solid #fed7aa;border-radius:10px;padding:12px;color:#1c1917;font-family:'Nunito',sans-serif;font-size:15px;font-weight:700;outline:none;margin-bottom:16px;-webkit-appearance:none;appearance:none"/>
+        <button class="log-btn" onclick="setSkiGoal()" style="width:100%;padding:12px">BUILD MY SKI PLAN 🎿</button>
+      </div>
+    </div></div>`;
+    return html;
+  }
+
+  const result=buildSkiPlan(goal);
+  const plan=result.plan;
+  const targetDateDisplay=new Date(goal.targetDate).toLocaleDateString("en-GB",{day:"numeric",month:"long",year:"numeric"});
+  const isSkiDay=isSameOrPastDay(goal.targetDate);
   const totalSavedSessions=Object.values(gymDoneToday).filter(d=>isToday(d)).length;
-  let html=`<div class="header"><div><div class="logo">SKI FIT PLAN</div><div class="header-sub">29 NOV SKI TRIP · TRACK YOUR SESSIONS</div></div><div style="text-align:right"><div class="pct">💪</div><div style="font-size:10px;color:rgba(255,255,255,0.8);font-weight:700">${totalSavedSessions} TODAY</div></div></div><div class="scroll">`;
-  html+=`<div style="margin:12px 16px;background:#fff;border:2px solid #fed7aa;border-radius:12px;padding:12px 14px"><div style="font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:3px;color:#ea580c;margin-bottom:6px">WEEKLY SCHEDULE</div><div style="font-size:11px;color:#78716c;font-weight:700;line-height:1.9">🟠 Mon — Run &nbsp;·&nbsp; 💪 Tue — Strength A &nbsp;·&nbsp; 🚶 Wed — Walk/Rest<br>🟠 Thu — Run &nbsp;·&nbsp; 🦵 Fri — Strength B &nbsp;·&nbsp; 🟠 Sat — Long Run &nbsp;·&nbsp; 😴 Sun — Rest</div></div>`;
-  WORKOUT_PLAN.forEach(phase=>{
-    html+=`<div class="wk-block"><div class="wk-label" style="color:${phase.color}">${phase.phase} <span style="font-size:10px;opacity:0.75;letter-spacing:1px">${phase.weeks}</span></div>`;
-    phase.workouts.forEach(w=>{
+
+  let html=`<div class="header"><div><div class="logo">SKI FIT PLAN</div><div class="header-sub">${targetDateDisplay.toUpperCase()} · ${result.totalWeeks} WEEK PLAN</div></div><div style="text-align:right"><div class="pct">💪</div><div style="font-size:10px;color:rgba(255,255,255,0.8);font-weight:700">${totalSavedSessions} TODAY</div></div></div><div class="scroll">`;
+  html+=`<div style="padding:10px 16px 0;text-align:right"><button onclick="editSkiGoal()" style="background:none;border:1.5px solid #fed7aa;border-radius:8px;color:#ea580c;padding:4px 10px;font-size:10px;font-weight:800;cursor:pointer">✏️ EDIT GOAL</button></div>`;
+
+  if(result.extended){
+    html+=`<div style="margin:10px 16px;background:#fef2f2;border:2px solid #fecaca;border-radius:12px;padding:12px 14px">
+      <div style="font-size:11px;font-weight:800;color:#dc2626;letter-spacing:1px;margin-bottom:4px">⚠️ TIMELINE TOO SHORT</div>
+      <div style="font-size:12px;color:#7f1d1d;font-weight:600;line-height:1.5">Your ski date is only ${result.requestedWeeks} week${result.requestedWeeks!==1?"s":""} away, but the 4-phase plan (Foundation → Build → Intensity → Ski Ready) needs at least ${result.totalWeeks} weeks to give each phase a fair amount of time. Showing the full ${result.totalWeeks}-week plan below — you'll need to compress or skip ahead in the phases to fit your actual timeline.</div>
+    </div>`;
+  }
+
+  html+=`<div style="margin:12px 16px;background:#fff;border:2px solid #fed7aa;border-radius:12px;padding:12px 14px"><div style="font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:3px;color:#ea580c;margin-bottom:6px">WEEKLY SCHEDULE</div><div style="font-size:11px;color:#78716c;font-weight:700;line-height:1.9">🟠 Mon — Easy Run &nbsp;·&nbsp; 🏋️ Tue — CrossFit &nbsp;·&nbsp; 🏊 Wed — Swim<br>🏋️ Thu — CrossFit &nbsp;·&nbsp; 🦵 Fri — Gym Accessories &nbsp;·&nbsp; 🟠 Sat — Long Run &nbsp;·&nbsp; 😴 Sun — Rest</div></div>`;
+
+  let lastPhase=null;
+  plan.forEach(wk=>{
+    if(wk.phase!==lastPhase){
+      html+=`<div class="wk-block"><div class="wk-label" style="color:${wk.color}">${wk.phase}</div>`;
+      lastPhase=wk.phase;
+    } else {
+      html+=`<div class="wk-block" style="padding-top:0">`;
+    }
+    html+=`<div style="font-size:10px;font-weight:800;color:#a8a29e;letter-spacing:2px;margin:0 0 4px 2px">WEEK ${wk.week}${wk.deload?' <span style="background:#dcfce7;color:#16a34a;padding:1px 8px;border-radius:10px;letter-spacing:1px">🌿 DELOAD</span>':""}</div>`;
+    wk.workouts.forEach(w=>{
       const doneToday=isDoneToday(w.id);
       const count=sessionCount(w.id);
       html+=`<div class="card${doneToday?" done-today":""}">
@@ -302,11 +727,36 @@ function renderGym(){
     });
     html+="</div>";
   });
+  html+=`<div style="padding:12px 16px"><div class="card race-card${isSkiDay?" race-day":""}"><span style="font-size:24px">🎿</span><div style="flex:1"><div class="sname">${isSkiDay?"ENJOY THE SLOPES!":"SKI TRIP — GO TIME!"}</div><div class="smeta">${targetDateDisplay.toUpperCase()}</div></div></div></div>`;
   html+="</div>";return html;
 }
 
+function setSkiGoal(){
+  const dateEl=document.getElementById("skiTargetDate");
+  const date=dateEl.value;
+  if(!date){alert("Please choose your ski session date!");return;}
+  const todayMidnight=new Date();todayMidnight.setHours(0,0,0,0);
+  const chosenDate=new Date(date+"T00:00:00");
+  if(chosenDate<=todayMidnight){alert("Please choose a date in the future!");return;}
+  const goal={startDate:new Date().toISOString().slice(0,10),targetDate:date};
+  save("ski_goal",goal);
+  render();
+}
+function editSkiGoal(){
+  const goal=getSkiGoal();
+  const hasHistory=Object.values(gymLogs).some(logs=>logs.length>0);
+  if(goal&&hasHistory){
+    const confirmed=confirm("You've already logged gym sessions against your current plan. Changing your ski date will rebuild the week numbering — sessions logged on weeks that no longer exist in the new plan won't show up (your data isn't deleted, just hidden until you go back to a similar timeframe). Continue?");
+    if(!confirmed)return;
+  }
+  save("ski_goal",null);render();
+}
+
 function renderModal(){
-  const phase=WORKOUT_PLAN.find(p=>p.workouts.find(w=>w.id===modalWorkout));
+  const skiGoal=getSkiGoal();
+  if(!skiGoal)return"";
+  const currentPlan=buildSkiPlan(skiGoal).plan;
+  const phase=currentPlan.find(p=>p.workouts.find(w=>w.id===modalWorkout));
   const workout=phase?.workouts.find(w=>w.id===modalWorkout);
   if(!workout)return"";
 
@@ -405,10 +855,59 @@ function renderModal(){
 }
 
 function renderWeight(){
-  const latest=wlog[0]?.lbs??SW,lost=SW-latest,pctg=Math.min(100,Math.max(0,Math.round(lost/(SW-GW)*100)));
+  const goal=getWeightGoal();
   let html=`<div class="scroll" style="height:calc(100vh - 48px)"><div class="wsec">`;
-  html+=`<div class="stitle">YOUR PROGRESS</div><div class="stats"><div class="scard"><div class="sval">${lbsToSt(latest)}</div><div class="slbl">CURRENT</div></div><div class="scard"><div class="sval" style="color:${lost>0?"#16a34a":"#ea580c"}">${lost>0?"-"+lbsToSt(Math.abs(lost)):"—"}</div><div class="slbl">LOST</div></div><div class="scard"><div class="sval" style="color:#ea580c">${pctg}%</div><div class="slbl">TO GOAL</div></div></div>`;
-  html+=`<div class="stitle">MILESTONES TO SKI 🎿</div><div class="ms-row">`;
+
+  if(!goal){
+    // No goal set yet — show setup form
+    html+=`<div class="stitle">SET YOUR GOAL</div>
+    <div style="background:#fff;border:2px solid #fed7aa;border-radius:14px;padding:16px;margin-bottom:16px">
+      <div style="font-size:12px;font-weight:700;color:#78716c;margin-bottom:14px;line-height:1.5">Enter your current weight, goal weight, and target date. We'll build milestones automatically.</div>
+      <div class="units">
+        <button class="${wunit==="st"?"active":""}" onclick="setUnit('st')">ST</button>
+        <button class="${wunit==="lbs"?"active":""}" onclick="setUnit('lbs')">LBS</button>
+        <button class="${wunit==="kg"?"active":""}" onclick="setUnit('kg')">KG</button>
+      </div>
+      <div style="margin-bottom:10px">
+        <div class="set-lbl" style="text-align:left;margin-bottom:4px">CURRENT WEIGHT</div>
+        <input class="winput" id="goalCurrent" type="number" step="0.1" placeholder="${wunit==="st"?"e.g. 17":wunit==="lbs"?"e.g. 238":"e.g. 108"}" style="width:100%"/>
+      </div>
+      <div style="margin-bottom:10px">
+        <div class="set-lbl" style="text-align:left;margin-bottom:4px">GOAL WEIGHT</div>
+        <input class="winput" id="goalTarget" type="number" step="0.1" placeholder="${wunit==="st"?"e.g. 14.5":wunit==="lbs"?"e.g. 203":"e.g. 92"}" style="width:100%"/>
+      </div>
+      <div style="margin-bottom:14px">
+        <div class="set-lbl" style="text-align:left;margin-bottom:4px">TARGET DATE</div>
+        <input id="goalDate" type="date" style="display:block;width:100%;box-sizing:border-box;background:#fff;border:2px solid #fed7aa;border-radius:10px;padding:12px;color:#1c1917;font-family:'Nunito',sans-serif;font-size:15px;font-weight:700;outline:none;-webkit-appearance:none;appearance:none"/>
+      </div>
+      <button class="log-btn" onclick="setWeightGoal()" style="width:100%;padding:12px">SET MY GOAL 🎯</button>
+    </div>`;
+    if(wlog.length>0){
+      html+=`<div class="stitle">HISTORY</div>`;
+      wlog.forEach((e,i)=>{const prev=wlog[i+1],delta=prev?e.lbs-prev.lbs:null,d=new Date(e.date);html+=`<div class="hist-item"><div class="hist-date">${d.toLocaleDateString("en-GB",{day:"numeric",month:"short"})}</div><div class="hist-w">${dispW(e.lbs,wunit)}</div><div style="display:flex;align-items:center;gap:6px">${delta!==null?`<span class="delta ${delta<0?"dg":"db"}">${delta<0?"▼":"▲"} ${Math.abs(delta).toFixed(1)}lb</span>`:""}<button class="del" onclick="delWeight(${e.id})">✕</button></div></div>`;});
+    }
+    html+="</div></div>";
+    return html;
+  }
+
+  const MS=buildMilestones(goal);
+  const SW=goal.startLbs,GW=goal.goalLbs;
+  const latest=wlog[0]?.lbs??SW,lost=SW-latest,pctg=Math.min(100,Math.max(0,Math.round(lost/(SW-GW||1)*100)));
+  // Compares calendar dates (not raw millisecond subtraction) to avoid timezone drift —
+  // previously, "days left" could show as negative ("date has passed") on the actual target
+  // day itself once it got late in the evening locally, because the target was parsed as
+  // midnight UTC while "now" used the local timezone.
+  const todayMidnight=new Date();todayMidnight.setHours(0,0,0,0);
+  const targetMidnightLocal=new Date(goal.targetDate+"T00:00:00");
+  const daysLeft=Math.round((targetMidnightLocal-todayMidnight)/(24*60*60*1000));
+
+  html+=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+    <div class="stitle" style="margin-bottom:0">YOUR PROGRESS</div>
+    <button onclick="editWeightGoal()" style="background:none;border:1.5px solid #fed7aa;border-radius:8px;color:#ea580c;padding:4px 10px;font-size:10px;font-weight:800;cursor:pointer">✏️ EDIT GOAL</button>
+  </div>`;
+  html+=`<div class="stats"><div class="scard"><div class="sval">${lbsToSt(latest)}</div><div class="slbl">CURRENT</div></div><div class="scard"><div class="sval" style="color:${lost>0?"#16a34a":"#ea580c"}">${lost>0?"-"+lbsToSt(Math.abs(lost)):"—"}</div><div class="slbl">LOST</div></div><div class="scard"><div class="sval" style="color:#ea580c">${pctg}%</div><div class="slbl">TO GOAL</div></div></div>`;
+  html+=`<div style="text-align:center;font-size:11px;font-weight:700;color:#78716c;margin-bottom:14px">${daysLeft>0?daysLeft+" days until your target date":daysLeft===0?"🎯 Today's the day!":"Target date has passed"}</div>`;
+  html+=`<div class="stitle">MILESTONES</div><div class="ms-row">`;
   MS.forEach((m,i)=>{const reached=latest<=m.target,cur=!reached&&(i===0||latest<=MS[i-1]?.target+3);html+=`<div class="ms-dot-wrap"><div class="ms-dot${reached?" reached":cur?" current":""}">${reached?"✓":""}</div><div class="ms-wk">${m.label}</div><div class="ms-tgt">${lbsToSt(m.target)}</div></div>`;});
   html+="</div>";
   html+=`<div class="chart-box"><div class="chart-title">WEIGHT TREND · <span style="color:#86efac">— TARGET</span></div>`;
@@ -421,6 +920,23 @@ function renderWeight(){
   else{html+='<div class="empty">LOG YOUR FIRST WEIGH-IN</div>';}
   html+="</div></div>";return html;
 }
+
+function setWeightGoal(){
+  const curEl=document.getElementById("goalCurrent");
+  const tgtEl=document.getElementById("goalTarget");
+  const dateEl=document.getElementById("goalDate");
+  const curLbs=toLbs(curEl.value,wunit);
+  const tgtLbs=toLbs(tgtEl.value,wunit);
+  const date=dateEl.value;
+  if(!curLbs||!tgtLbs||!date){alert("Please fill in all three fields!");return;}
+  const todayMidnight=new Date();todayMidnight.setHours(0,0,0,0);
+  const chosenDate=new Date(date+"T00:00:00");
+  if(chosenDate<=todayMidnight){alert("Please choose a target date in the future!");return;}
+  const goal={startLbs:curLbs,goalLbs:tgtLbs,startDate:new Date().toISOString().slice(0,10),targetDate:date};
+  save("weight_goal",goal);
+  render();
+}
+function editWeightGoal(){save("weight_goal",null);render();}
 
 function renderTimer(){
   if(!timer)return"";
@@ -461,8 +977,14 @@ function attachEvents(){
 function setTab(t){tab=t;render()}
 function setUnit(u){wunit=u;render()}
 function toggleRun(id){runDone=runDone.includes(id)?runDone.filter(x=>x!==id):[...runDone,id];save("c6k_done",runDone);render()}
-function startTimerById(id){const s=RUNNING_PLAN.flatMap(w=>w.sessions).find(s=>s.id===id);if(s)startTimer(s)}
-function stopTimer(){clearInterval(timerInt);timer=null;tab="run";render()}
+function toggleMissed(id){
+  if(runMissed.includes(id)){runMissed=runMissed.filter(x=>x!==id);}
+  else{runMissed=[...runMissed,id];if(runDone.includes(id)){runDone=runDone.filter(x=>x!==id);save("c6k_done",runDone);}}
+  save("c6k_missed",runMissed);
+  render();
+}
+// startTimerByGenId (defined above) replaces the old static startTimerById
+// stopTimer is defined earlier in the file (with the other timer control functions)
 function pauseTimer(){if(!timer)return;timer.running=!timer.running;if(timer.running)runTimer();else clearInterval(timerInt);render()}
 function skipTimer(){if(!timer)return;const next=timer.qi+1;if(next>=timer.queue.length){timer.done=true;timer.running=false;clearInterval(timerInt);}else{timer.qi=next;timer.rem=timer.queue[next].dur;}render()}
 function markRunDone(){if(timer&&!runDone.includes(timer.session.id)){runDone=[...runDone,timer.session.id];save("c6k_done",runDone)}stopTimer()}
@@ -483,7 +1005,9 @@ function logSet(sk,setNum,workoutId){
 }
 
 function saveSession(workoutId){
-  const workout=WORKOUT_PLAN.flatMap(p=>p.workouts).find(w=>w.id===workoutId);
+  const skiGoal=getSkiGoal();
+  if(!skiGoal)return;
+  const workout=buildSkiPlan(skiGoal).plan.flatMap(p=>p.workouts).find(w=>w.id===workoutId);
   if(!workout)return;
   const now=new Date().toISOString();
   workout.exercises.forEach(name=>{
