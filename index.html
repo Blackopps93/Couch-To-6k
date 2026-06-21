@@ -456,6 +456,10 @@ let currentSession=load("current_session",{});
 let currentSessionId=load("current_session_id","");
 let wlog=load("c6k_wt",[]);
 let tab="run",wunit="st",timer=null,timerInt=null,audioCtx=null,modalWorkout=null;
+// Tracks whether the user has dismissed the "timeline too short" warning for their CURRENT
+// goal. Keyed to a hash of the goal itself so it correctly reappears if they change the
+// target distance or date later, rather than staying silenced forever.
+let dismissedShortTimelineFor=load("dismissed_short_timeline",null);
 let expandedHistory={};
 
 // Uses local calendar date components (not toISOString, which is UTC and can drift to the
@@ -549,16 +553,11 @@ function renderRun(){
         <div style="font-size:12px;font-weight:700;color:#78716c;margin-bottom:14px;line-height:1.5">Tell us your current ability, your target distance, and your target date — we'll build a progressive plan automatically.</div>
 
         <div class="set-lbl" style="text-align:left;margin-bottom:6px">HOW LONG CAN YOU CURRENTLY RUN CONTINUOUSLY?</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:14px" id="fitnessOptions">
-          <button class="fitness-opt" data-val="0" onclick="selectFitness(0)" style="text-align:center;padding:10px 8px;border:2px solid #fed7aa;border-radius:10px;background:#fff;font-size:12px;font-weight:700;color:#1c1917;cursor:pointer">🚶 Can't run yet</button>
-          <button class="fitness-opt" data-val="5" onclick="selectFitness(5)" style="text-align:center;padding:10px 8px;border:2px solid #fed7aa;border-radius:10px;background:#fff;font-size:12px;font-weight:700;color:#1c1917;cursor:pointer">~5 mins</button>
-          <button class="fitness-opt" data-val="8" onclick="selectFitness(8)" style="text-align:center;padding:10px 8px;border:2px solid #fed7aa;border-radius:10px;background:#fff;font-size:12px;font-weight:700;color:#1c1917;cursor:pointer">~8 mins</button>
-          <button class="fitness-opt" data-val="10" onclick="selectFitness(10)" style="text-align:center;padding:10px 8px;border:2px solid #fed7aa;border-radius:10px;background:#fff;font-size:12px;font-weight:700;color:#1c1917;cursor:pointer">~10 mins</button>
-          <button class="fitness-opt" data-val="12" onclick="selectFitness(12)" style="text-align:center;padding:10px 8px;border:2px solid #fed7aa;border-radius:10px;background:#fff;font-size:12px;font-weight:700;color:#1c1917;cursor:pointer">~12 mins</button>
-          <button class="fitness-opt" data-val="15" onclick="selectFitness(15)" style="text-align:center;padding:10px 8px;border:2px solid #fed7aa;border-radius:10px;background:#fff;font-size:12px;font-weight:700;color:#1c1917;cursor:pointer">~15 mins</button>
-          <button class="fitness-opt" data-val="20" onclick="selectFitness(20)" style="text-align:center;padding:10px 8px;border:2px solid #fed7aa;border-radius:10px;background:#fff;font-size:12px;font-weight:700;color:#1c1917;cursor:pointer">~20 mins</button>
-          <button class="fitness-opt" data-val="30" onclick="selectFitness(30)" style="text-align:center;padding:10px 8px;border:2px solid #fed7aa;border-radius:10px;background:#fff;font-size:12px;font-weight:700;color:#1c1917;cursor:pointer">30+ mins</button>
+        <div style="display:flex;gap:8px;margin-bottom:6px">
+          <input id="fitnessMinsInput" type="number" step="0.5" min="0" max="60" placeholder="e.g. 2.5" style="flex:1;background:#fff;border:2px solid #fed7aa;border-radius:10px;padding:11px 12px;color:#1c1917;font-family:'Nunito',sans-serif;font-size:15px;font-weight:700;outline:none" oninput="onFitnessInput()"/>
+          <div style="display:flex;align-items:center;padding:0 4px;font-size:13px;font-weight:700;color:#78716c">mins</div>
         </div>
+        <button id="cantRunYetBtn" onclick="selectFitness(0)" style="width:100%;text-align:center;padding:9px 8px;border:2px solid #fed7aa;border-radius:10px;background:#fff;font-size:12px;font-weight:700;color:#78716c;cursor:pointer;margin-bottom:14px">🚶 I can't run continuously at all yet</button>
 
         <div class="set-lbl" style="text-align:left;margin-bottom:4px">TARGET DISTANCE (KM)</div>
         <input class="winput" id="targetKm" type="number" step="0.5" placeholder="e.g. 6" style="width:100%;margin-bottom:14px"/>
@@ -586,7 +585,8 @@ function renderRun(){
   let html=`<div class="header"><div><div class="logo">RUN TO ${displayKm}KM</div><div class="header-sub">${targetDateDisplay.toUpperCase()} TARGET · ${doneCount}/${totalSessions} SESSIONS${missedCount>0?" · "+missedCount+" missed":""}</div></div><div style="text-align:right"><div class="pct">${pct}%</div><div class="pbar-out"><div class="pbar-in" style="width:${pct}%"></div></div></div></div><div class="scroll">`;
   html+=`<div style="padding:10px 16px 0;text-align:right"><button onclick="editRunGoal()" style="background:none;border:1.5px solid #fed7aa;border-radius:8px;color:#ea580c;padding:4px 10px;font-size:10px;font-weight:800;cursor:pointer">✏️ EDIT GOAL</button></div>`;
 
-  if(!result.achievable){
+  const goalKey=goal.targetKm+"_"+goal.targetDate+"_"+goal.fitnessMins;
+  if(!result.achievable&&dismissedShortTimelineFor!==goalKey){
     const realisticDateDisplay=result.realisticDate?new Date(result.realisticDate).toLocaleDateString("en-GB",{day:"numeric",month:"long",year:"numeric"}):null;
     html+=`<div style="margin:10px 16px;background:#fef2f2;border:2px solid #fecaca;border-radius:12px;padding:12px 14px">
       <div style="font-size:11px;font-weight:800;color:#dc2626;letter-spacing:1px;margin-bottom:4px">⚠️ TIMELINE TOO SHORT FOR ${goal.targetKm}KM</div>
@@ -597,6 +597,7 @@ function renderRun(){
         <div style="font-size:11px;color:#7f1d1d;font-weight:600;margin-top:4px">That's when you'd safely reach ${goal.targetKm}km following the same gradual progression.</div>
         <button onclick="applyRealisticDate('${result.realisticDate}')" style="width:100%;margin-top:8px;background:linear-gradient(135deg,#dc2626,#b91c1c);border:none;border-radius:8px;color:white;padding:9px;font-family:'Nunito',sans-serif;font-size:12px;font-weight:800;cursor:pointer">USE THIS DATE INSTEAD</button>
       </div>`:""}
+      <button onclick="dismissShortTimelineWarning('${goalKey}')" style="width:100%;margin-top:8px;background:#fff;border:1.5px solid #fca5a5;border-radius:8px;color:#7f1d1d;padding:9px;font-family:'Nunito',sans-serif;font-size:12px;font-weight:800;cursor:pointer">KEEP MY CURRENT DATE — I'M OK WITH ${result.effectiveTargetKm}KM</button>
     </div>`;
   }
 
@@ -625,13 +626,23 @@ function renderRun(){
 let selectedFitness=null; // store as number; null means "not yet selected" (0 is a valid selection)
 function selectFitness(val){
   selectedFitness=val;
-  document.querySelectorAll(".fitness-opt").forEach(btn=>{
-    if(parseInt(btn.dataset.val)===val){btn.style.borderColor="#f97316";btn.style.background="#fff7ed";}
-    else{btn.style.borderColor="#fed7aa";btn.style.background="#fff";}
-  });
+  const inputEl=document.getElementById("fitnessMinsInput");
+  const zeroBtn=document.getElementById("cantRunYetBtn");
+  if(val===0){
+    if(inputEl)inputEl.value="";
+    if(zeroBtn){zeroBtn.style.borderColor="#f97316";zeroBtn.style.background="#fff7ed";zeroBtn.style.color="#ea580c";}
+  }
+}
+function onFitnessInput(){
+  const inputEl=document.getElementById("fitnessMinsInput");
+  const zeroBtn=document.getElementById("cantRunYetBtn");
+  const val=parseFloat(inputEl.value);
+  if(zeroBtn){zeroBtn.style.borderColor="#fed7aa";zeroBtn.style.background="#fff";zeroBtn.style.color="#78716c";}
+  selectedFitness=(!isNaN(val)&&val>=0)?val:null;
 }
 function setRunGoal(){
-  if(selectedFitness===null){alert("Please select your current running ability!");return;}
+  if(selectedFitness===null){alert("Please enter how many minutes you can currently run, or tap \"I can't run continuously yet\"!");return;}
+  if(selectedFitness<0||selectedFitness>60){alert("Please enter a realistic number of minutes (0–60).");return;}
   const kmEl=document.getElementById("targetKm");
   const dateEl=document.getElementById("runTargetDate");
   const km=parseFloat(kmEl.value);
@@ -659,6 +670,11 @@ function applyRealisticDate(newDate){
   if(!goal)return;
   goal.targetDate=newDate;
   save("run_goal",goal);
+  render();
+}
+function dismissShortTimelineWarning(goalKey){
+  dismissedShortTimelineFor=goalKey;
+  save("dismissed_short_timeline",goalKey);
   render();
 }
 function startTimerByGenId(id){
